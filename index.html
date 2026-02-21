@@ -341,11 +341,32 @@
         let timerInterval;
 
         /* REGISTER */
-        function submitForm(e) {
-            e.preventDefault();
-            document.getElementById('registerBox').style.display = "none";
-            document.getElementById('takeTest').style.display = "block";
-        }
+        async function submitForm(e) {
+    e.preventDefault();
+
+    const inputs = document.querySelectorAll("#register input, #register select");
+
+    const data = {
+        name: inputs[0].value,
+        email: inputs[1].value,
+        department: inputs[2].value,
+        year: inputs[3].value
+    };
+
+    const response = await fetch("http://localhost:5000/register", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    });
+
+    const result = await response.json();
+    alert(result.message);
+
+    document.getElementById('registerBox').style.display = "none";
+    document.getElementById('takeTest').style.display = "block";
+}
 
         /* SHUFFLE */
         function shuffle(array) {
@@ -447,22 +468,38 @@
         }
 
         /* SUBMIT */
-        function submitExam() {
-            clearInterval(timerInterval);
+        async function submitExam() {
+    clearInterval(timerInterval);
 
-            let score = 0;
-            questions.forEach((qDiv, index) => {
-                let checked = qDiv.querySelector("input:checked");
-                if (checked && parseInt(checked.value) === selectedQuestions[index].a) {
-                    score++;
-                }
-            });
-
-            document.getElementById("exam").style.display = "none";
-            document.body.style.overflow = "auto";
-            document.getElementById("finalResult").style.display = "flex";
-            document.getElementById("bigScore").innerHTML = "Your Score: " + score + " / 10";
+    let score = 0;
+    questions.forEach((qDiv, index) => {
+        let checked = qDiv.querySelector("input:checked");
+        if (checked && parseInt(checked.value) === selectedQuestions[index].a) {
+            score++;
         }
+    });
+
+    // 👉 GET EMAIL FROM REGISTRATION FORM
+    const email = document.querySelector("#register input:nth-child(2)").value;
+
+    // 👉 SEND RESULT TO BACKEND
+    await fetch("http://localhost:5000/submit-result", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            email: email,
+            score: score
+        })
+    });
+
+    // 👉 SHOW RESULT SCREEN
+    document.getElementById("exam").style.display = "none";
+    document.body.style.overflow = "auto";
+    document.getElementById("finalResult").style.display = "flex";
+    document.getElementById("bigScore").innerHTML = "Your Score: " + score + " / 10";
+}
     </script>
 
 </body>
